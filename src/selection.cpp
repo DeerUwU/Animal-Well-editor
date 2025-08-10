@@ -30,7 +30,7 @@ void SelectionHandler::start_from_paste(glm::ivec2 pos, const MapSlice& data) {
     history.push_action(std::make_unique<AreaChange>(orig_pos, temp_buffer));
 
     // put copied tiles down
-    data.paste(currentMap(), orig_pos);
+    data.paste(currentMap(), orig_pos, ignore_air);
     selection_buffer = data;
 }
 
@@ -71,7 +71,7 @@ void SelectionHandler::change_layer(int from, int to) {
     auto& map = currentMap();
     temp_buffer.paste(map, glm::ivec3(start_pos, from)); // put original data back
     temp_buffer.copy(map, glm::ivec3(start_pos, to), _size); // store underlying
-    selection_buffer.paste(map, glm::ivec3(start_pos, to)); // place preview on top
+    selection_buffer.paste(map, glm::ivec3(start_pos, to), ignore_air); // place preview on top
     updateGeometry = true;
 }
 
@@ -86,7 +86,7 @@ void SelectionHandler::move(glm::ivec2 delta) {
 
     // store underlying
     temp_buffer.copy(map, glm::ivec3(start_pos, mode1_layer), _size);
-    selection_buffer.paste(map, glm::ivec3(start_pos, mode1_layer)); // place preview on top
+    selection_buffer.paste(map, glm::ivec3(start_pos, mode1_layer), ignore_air); // place preview on top
 
     updateGeometry = true;
 }

@@ -43,9 +43,11 @@ class MapSlice {
             }
         }
     }
-    void paste(Map& map, glm::ivec3 pos) const {
+    void paste(Map& map, glm::ivec3 pos, bool ignore_air = false) const {
         for(int y = 0; y < _size.y; ++y) {
             for(int x = 0; x < _size.x; ++x) {
+                if (ignore_air && data[x + y * _size.x].tile_id == 0) continue;
+
                 map.setTile(pos.z, x + pos.x, y + pos.y, data[x + y * _size.x]);
             }
         }

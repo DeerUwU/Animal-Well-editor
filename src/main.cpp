@@ -662,7 +662,7 @@ static void handle_input() {
             mode0_selection += arrow_key_dir();
         }
 
-        if(GetKeyDown(ImGuiKey_Escape) || ImGui::IsKeyDown(ImGuiMod_Ctrl) and GetKeyDown(ImGuiKey_D)) {
+        if(GetKeyDown(ImGuiKey_Escape) || (ImGui::IsKeyDown(ImGuiMod_Ctrl) && GetKeyDown(ImGuiKey_D))) {
             mode0_selection = glm::ivec2(-1, -1);
         }
     } else if(mouse_mode == 1) {
@@ -686,7 +686,7 @@ static void handle_input() {
         }
 
         if(holding) {
-            if(GetKeyDown(ImGuiKey_Escape) || ImGui::IsKeyDown(ImGuiMod_Ctrl) and GetKeyDown(ImGuiKey_D)) selection_handler.release();
+            if(GetKeyDown(ImGuiKey_Escape) || (ImGui::IsKeyDown(ImGuiMod_Ctrl) && GetKeyDown(ImGuiKey_D))) selection_handler.release();
             if(GetKeyDown(ImGuiKey_Delete)) selection_handler.erase();
             if(ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
                 if(GetKeyDown(ImGuiKey_C)) clipboard.copy(currentMap(), selection_handler.start(), selection_handler.size());
@@ -952,7 +952,7 @@ b/g to move to background layer.");
             selection_handler.change_layer(mode1_layer, 1);
             mode1_layer = 1;
         }
-
+        ImGui::Checkbox("Selection ignore air", &selection_handler.ignore_air);
         ImGui::NewLine();
         ImGui::InputScalar("id", ImGuiDataType_U16, &mode1_placing.tile_id);
         ImGui::InputScalar("param", ImGuiDataType_U8, &mode1_placing.param);
