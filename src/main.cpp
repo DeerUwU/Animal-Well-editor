@@ -642,6 +642,14 @@ static void handle_input() {
 
     if(io.WantCaptureMouse) return;
 
+
+    if(ImGui::IsKeyDown(ImGuiKey_1)) {
+        mouse_mode = 0;
+    }
+    if(ImGui::IsKeyDown(ImGuiKey_2)) {
+        mouse_mode = 1;
+    }
+
     if(mouse_mode == 0) {
         if(ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
             camera.position -= delta / camera.scale;
@@ -654,7 +662,7 @@ static void handle_input() {
             mode0_selection += arrow_key_dir();
         }
 
-        if(GetKeyDown(ImGuiKey_Escape)) {
+        if(GetKeyDown(ImGuiKey_Escape) || ImGui::IsKeyDown(ImGuiMod_Ctrl) and GetKeyDown(ImGuiKey_D)) {
             mode0_selection = glm::ivec2(-1, -1);
         }
     } else if(mouse_mode == 1) {
@@ -678,7 +686,7 @@ static void handle_input() {
         }
 
         if(holding) {
-            if(GetKeyDown(ImGuiKey_Escape)) selection_handler.release();
+            if(GetKeyDown(ImGuiKey_Escape) || ImGui::IsKeyDown(ImGuiMod_Ctrl) and GetKeyDown(ImGuiKey_D)) selection_handler.release();
             if(GetKeyDown(ImGuiKey_Delete)) selection_handler.erase();
             if(ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
                 if(GetKeyDown(ImGuiKey_C)) clipboard.copy(currentMap(), selection_handler.start(), selection_handler.size());
@@ -770,7 +778,9 @@ static void DrawPreviewWindow() {
                     ImGui::SetTooltip("Properties that are stored for each room (40x22 tiles)");
                 }
                 ImGui::Text("position %i %i", room->x, room->y);
-                ImGui::InputScalar("water level", ImGuiDataType_U8, &room->waterLevel);
+                //ImGui::InputScalar("water level", ImGuiDataType_U8, &room->waterLevel);
+                const uint8_t water_min = 0, water_max = 180;
+                ImGui::SliderScalar("water level", ImGuiDataType_U8, &room->waterLevel, &water_min, &water_max);
                 const uint8_t bg_min = 0, bg_max = 19;
                 if(ImGui::SliderScalar("background id", ImGuiDataType_U8, &room->bgId, &bg_min, &bg_max)) {
                     renderBgs(map);
@@ -880,7 +890,7 @@ Right click to place a tile.\n\
 Shift + Left click to select an area.\n\
 Move selected area with Left click.\n\
 Del to delete selection.\n\
-Esc to deselect.\n\
+ctrl + d or Esc to deselect.\n\
 ctrl + c to copy the selected area.\n\
 ctrl + x to cut selected area.\n\
 ctrl + v to paste at mouse position.\n\
@@ -1284,7 +1294,6 @@ static int runViewer() {
             tile_viewer.draw(game_data, updateGeometry);
             texture_importer.draw();
             DrawPreviewWindow();
-
             draw_overlay();
             draw_water_level();
             search_window.draw_overlay(game_data, selectedMap, camera.scale);
