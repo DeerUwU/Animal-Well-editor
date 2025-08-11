@@ -652,8 +652,8 @@ static void handle_input() {
 
     if(mouse_mode == 0) {
         if(ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
-            camera.position -= delta / camera.scale;
-        }
+                camera.position -= delta / camera.scale;
+            }
         if(ImGui::IsKeyDown(ImGuiKey_MouseRight)) {
             mode0_selection = screen_to_world(mousePos);
         }
@@ -700,6 +700,13 @@ static void handle_input() {
 
             // selection_handler will push undo data once position is finalized
             updateGeometry = true;
+        }
+
+        // select whole room
+        if(ImGui::IsKeyDown(ImGuiMod_Ctrl) && GetKeyDown(ImGuiKey_A)) {
+            auto room_pos = mouse_world_pos / Room::size;
+            selection_handler.drag_begin(room_pos * Room::size);
+            selection_handler.drag_end(room_pos * Room::size + (Room::size - glm::ivec2(1, 1)));
         }
 
         if(holding && selection_handler.contains(lastWorldPos)) {
@@ -890,6 +897,7 @@ Right click to place a tile.\n\
 Shift + Left click to select an area.\n\
 Move selected area with Left click.\n\
 Del to delete selection.\n\
+ctrl + a to select all tiles in room.\n\
 ctrl + d or Esc to deselect.\n\
 ctrl + c to copy the selected area.\n\
 ctrl + x to cut selected area.\n\
