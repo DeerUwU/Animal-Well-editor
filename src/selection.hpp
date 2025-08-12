@@ -18,7 +18,8 @@ class SelectionHandler {
   public:
     void drag_begin(glm::ivec2 pos);
     void drag_end(glm::ivec2 pos);
-
+    void room_drag_begin(glm::ivec2 pos);
+    void room_drag_end(glm::ivec2 pos);
     // sets area and copies underlying data
     void start_from_paste(glm::ivec2 pos, const MapSlice& data);
 

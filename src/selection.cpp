@@ -17,6 +17,21 @@ void SelectionHandler::drag_end(glm::ivec2 pos) {
     selection_buffer.copy(currentMap(), orig_pos, _size);
 }
 
+void SelectionHandler::room_drag_begin(glm::ivec2 pos) {
+    release();
+    start_pos = pos;
+}
+void SelectionHandler::room_drag_end(glm::ivec2 pos) {
+    assert(start_pos != glm::ivec2(-1, -1));
+
+    auto room1 = currentMap().getRoom(start_pos / Room::size);
+    auto room2 = currentMap().getRoom(pos / Room::size);
+    
+    auto roomtemp = room1;
+    room1 = room2;
+    room2 = roomtemp;
+}
+
 void SelectionHandler::start_from_paste(glm::ivec2 pos, const MapSlice& data) {
     release();
     if(data.size() == glm::ivec2(0)) return;
