@@ -82,7 +82,8 @@ add_executable(editor ${Common_sources} ${imgui_sources}
     "${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp"
     "${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
     "./lib/glad/src/gl.c"
-    "./lib/nativefiledialog/nfd.cpp")
+    "./lib/nativefiledialog/nfd.cpp"
+    "./res/icon.rc")
 
 file(GLOB shaders RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/shaders/**")
 cmrc_add_resource_library(shader_resource ALIAS cmrc_shaders NAMESPACE resources ${shaders})

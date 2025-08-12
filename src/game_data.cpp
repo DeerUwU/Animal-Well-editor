@@ -342,6 +342,28 @@ void GameData::backup_assets(const std::string& path) const {
 
         std::filesystem::copy_file(item, bp / item.path().filename());
     }
+
+    // delete old backups
+    std::filesystem::path p1 { p / "backups" };
+    std::vector<std::filesystem::directory_entry> folders;
+    for (auto& item : std::filesystem::directory_iterator(p1))
+    { 
+        if(!item.is_directory()) continue;
+        folders.push_back(item);
+    }
+     
+    if (folders.size() > max_backups) {
+        // Sort by last write time (oldest first)
+        std::sort(folders.begin(), folders.end(),
+        [](const std::filesystem::directory_entry& a, const std::filesystem::directory_entry& b) {
+            return std::filesystem::last_write_time(a) < std::filesystem::last_write_time(b);
+        });
+
+        while (folders.size() > max_backups) {
+            std::filesystem::remove_all(folders.front().path());
+            folders.erase(folders.begin());
+        }
+    }
 }
 
 std::vector<uint8_t> GameData::get_asset(int id) {

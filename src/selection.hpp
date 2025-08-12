@@ -35,7 +35,7 @@ class SelectionHandler {
 
     void move(glm::ivec2 delta);
 
-    bool ignore_air = false;
+    bool ignore_air = true;
     bool selecting() const;
     bool holding() const;
     bool contains(glm::ivec2 pos) const;

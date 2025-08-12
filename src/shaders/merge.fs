@@ -18,8 +18,8 @@ void main() {
     vec2 r2;
 
     r0.xyz = texture(lightMask, TexCoords).xyz;
-    // r1.xyz = texture(foregroundLight, TexCoords).xyz + 0.2;
-    r1.xyz = vec3(0.2);
+    r1.xyz = texture(foregroundLight, TexCoords).xyz + 0.2;
+    //r1.xyz = vec3(0.0); // fg brightness lift
     r2.xy = texture(visibility, TexCoords).xz;
     
     bool b1 = r2.y >= 0.7874;

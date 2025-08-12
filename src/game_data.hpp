@@ -34,6 +34,8 @@ class GameData {
     std::array<Image, 15> backgrounds;
 
     bool loaded = false;
+    uint8_t backup_frequency = 5; //time in minutes
+    uint8_t max_backups = 10;
 
     static GameData load_exe(const std::string& path);
     void load_folder(const std::string& path);
