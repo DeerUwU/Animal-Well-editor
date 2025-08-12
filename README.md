@@ -1,6 +1,6 @@
 # Animal Well editor
 
-Map editor for the Game Animal Well
+Map editor for the Game Animal Well. <br/>
 This fork includes some quality of life improvements & tweaks like extra hotkeys, more selection options and auto deleting oldest backups.
 
 todo:
