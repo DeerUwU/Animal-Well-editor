@@ -6,6 +6,7 @@
 inline int selectedMap = 0;
 inline bool updateGeometry = false;
 inline GameData game_data;
+inline std::string exportPath;
 
 // 0 = forground, 1 = background
 inline uint8_t mode1_layer = 0;

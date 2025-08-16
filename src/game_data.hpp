@@ -34,14 +34,13 @@ class GameData {
     std::array<Image, 15> backgrounds;
 
     bool loaded = false;
-    uint8_t backup_frequency = 5; //time in minutes
     uint8_t max_backups = 10;
 
     static GameData load_exe(const std::string& path);
     void load_folder(const std::string& path);
     void save_folder(const std::string& path) const;
 
-    std::vector<uint8_t> get_asset(int id);
+    std::vector<uint8_t> get_asset(int id, std::string path = "");
 
   private:
     void backup_assets(const std::string& path) const;

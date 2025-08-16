@@ -363,6 +363,7 @@ class {
         }
 
         export_path = path;
+        exportPath = path;
         try {
             game_data.load_folder(export_path);
             has_exported = true;
@@ -656,6 +657,36 @@ static void handle_input() {
         return;
     }
 
+    if(ImGui::IsKeyDown(ImGuiMod_Ctrl) && GetKeyDown(ImGuiKey_R)) {
+        render_data->accurate_render = !render_data->accurate_render;
+        updateGeometry = true;
+        return;
+    }
+
+    if(ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
+        if(ImGui::IsKeyPressed(ImGuiKey_Z)) history.undo();
+        if(ImGui::IsKeyPressed(ImGuiKey_Y)) history.redo();
+
+        if(GetKeyDown(ImGuiKey_S)) {
+            if(ImGui::IsKeyDown(ImGuiKey_ModShift))
+                saver.export_explicit();
+            else
+                saver.export_implicit();
+        }
+        if(ImGui::IsKeyPressed(ImGuiKey_1)) {
+            render_data->show_fg = !render_data->show_fg;
+            return;
+        }
+        if(ImGui::IsKeyPressed(ImGuiKey_2)) {
+            render_data->show_bg = !render_data->show_bg;
+            return;
+        }
+        if(ImGui::IsKeyPressed(ImGuiKey_3)) {
+            render_data->show_bg_tex = !render_data->show_bg_tex;
+            return;
+        }
+    }
+
     if(mouse_mode == 0) { // inspect mode
         if(ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
             camera.position -= delta / camera.scale;
@@ -682,8 +713,9 @@ static void handle_input() {
 
         const auto holding = selection_handler.holding();
         auto selecting = selection_handler.selecting();
+        auto selecting_room = selection_handler.selecting_room;
 
-        if(!selecting && ImGui::IsKeyDown(ImGuiKey_MouseLeft) && ImGui::IsKeyDown(ImGuiMod_Shift)) { // select start
+        if(!selecting && ImGui::IsKeyDown(ImGuiMod_Shift) && ImGui::IsKeyDown(ImGuiKey_MouseLeft)) { // select start
             selection_handler.drag_begin(mouse_world_pos);
             selecting = true;
             return;
@@ -693,15 +725,21 @@ static void handle_input() {
             return;
         }
         // drag room
-        if(!selecting && ImGui::IsKeyDown(ImGuiKey_MouseLeft) && ImGui::IsKeyDown(ImGuiMod_Alt)) { // select start
-            selection_handler.room_drag_begin(mouse_world_pos);
-            selecting = true;
-            return;
+        if(!selecting_room && ImGui::IsKeyDown(ImGuiMod_Alt) && ImGui::IsKeyDown(ImGuiKey_MouseLeft) ) { // select start
+            selection_handler.swap_room_1 = currentMap().getRoom(mouse_world_pos / Room::size);
+            selecting_room = true;
         }
-        if(selecting && ImGui::IsKeyDown(ImGuiKey_MouseLeft) && ImGui::IsKeyDown(ImGuiMod_Alt)) { // select start
-            selection_handler.room_drag_end(mouse_world_pos);
-            selecting = false;
-            return;
+        if(selecting_room && !ImGui::IsKeyDown(ImGuiKey_MouseLeft)) { // select start
+            selection_handler.swap_room_2 = currentMap().getRoom(mouse_world_pos / Room::size);
+            uint8_t temp_x = selection_handler.swap_room_2->x;
+            uint8_t temp_y = selection_handler.swap_room_2->y;
+
+            selection_handler.swap_room_2->x = selection_handler.swap_room_1->x;
+            selection_handler.swap_room_2->y = selection_handler.swap_room_1->x;
+
+            selection_handler.swap_room_1->x = temp_x;
+            selection_handler.swap_room_1->y = temp_y;
+            selecting_room = false;
         }
 
         if((ImGui::IsKeyPressed(ImGuiKey_F) && mode1_layer == 1) ||
@@ -744,36 +782,8 @@ static void handle_input() {
             if(ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
                 selection_handler.move(mouse_world_pos - lastWorldPos);
             }
-        } else if(!selecting && ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
+        } else if(!selecting && !selecting_room && ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
             camera.position -= delta / camera.scale;
-        }
-    }
-
-    if(ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
-        if(ImGui::IsKeyPressed(ImGuiKey_Z)) history.undo();
-        if(ImGui::IsKeyPressed(ImGuiKey_Y)) history.redo();
-
-        if(GetKeyDown(ImGuiKey_R)) {
-            render_data->accurate_render = !render_data->accurate_render;
-            updateGeometry = true;
-        }
-        if(GetKeyDown(ImGuiKey_S)) {
-            if(ImGui::IsKeyDown(ImGuiKey_ModShift))
-                saver.export_explicit();
-            else
-                saver.export_implicit();
-        }
-        if(ImGui::IsKeyPressed(ImGuiKey_1)) {
-            render_data->show_fg = !render_data->show_fg;
-            return;
-        }
-        if(ImGui::IsKeyPressed(ImGuiKey_2)) {
-            render_data->show_bg = !render_data->show_bg;
-            return;
-        }
-        if(ImGui::IsKeyPressed(ImGuiKey_3)) {
-            render_data->show_bg_tex = !render_data->show_bg_tex;
-            return;
         }
     }
 }

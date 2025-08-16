@@ -4,6 +4,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include "globals.hpp"
 
 #include "dos_parser.hpp"
 #include "windows/errors.hpp"
@@ -366,11 +367,32 @@ void GameData::backup_assets(const std::string& path) const {
     }
 }
 
-std::vector<uint8_t> GameData::get_asset(int id) {
+std::vector<uint8_t> GameData::get_asset(int id, std::string path) {
     assert(id >= 0 && id < assets.size());
     auto& asset = assets[id];
     auto dat = sections.get_rdata_ptr(asset.ptr, asset.length);
 
+    if (path != "") {
+        std::unordered_map<int, std::string> files;
+        for(auto& item : std::filesystem::directory_iterator(path)) {
+            if(!item.is_regular_file()) continue;
+
+            int id = readInt(item.path().filename().string());
+            if(id == -1) continue;
+            if(files.contains(id)) error_dialog.warning("multiple files with the same id found in project folder.");
+            files[id] = item.path().string();
+        }
+
+        auto getAsset = [&](int id) -> std::optional<std::vector<uint8_t>> {
+            if(!files.contains(id)) return std::nullopt;
+            std::ifstream testFile(files[id], std::ios::binary);
+            testFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+            return std::vector<uint8_t>(std::istreambuf_iterator(testFile), std::istreambuf_iterator<char>());
+        };
+    }
+
+    
+    
     std::vector<uint8_t> buffer;
     if(tryDecrypt(asset, dat, buffer)) {
         return buffer;
@@ -416,7 +438,7 @@ void GameData::bufferFromExe() {
     ambient = LightingData::parse(get_asset(179));
     assert(equal(get_asset(179), LightingData::save(ambient)));
 
-    atlas = Image(get_asset(255));
+    atlas = Image(get_asset(255, exportPath));
     bunny = Image(get_asset(30));
     time_capsule = Image(get_asset(277));
 

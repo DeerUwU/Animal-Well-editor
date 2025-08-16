@@ -41,8 +41,13 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/bluescan/proggyfonts.git
   GIT_TAG        v1.1.7
 )
+FetchContent_Declare(
+  json 
+  URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+  )
+  
+FetchContent_MakeAvailable(cmrc stb imgui glm proggyfonts json)
 
-FetchContent_MakeAvailable(cmrc stb imgui glm proggyfonts)
 
 find_package(OpenGL REQUIRED)
 
@@ -90,7 +95,7 @@ cmrc_add_resource_library(shader_resource ALIAS cmrc_shaders NAMESPACE resources
 cmrc_add_resource_library(font_resource ALIAS cmrc_font NAMESPACE font WHENCE "${proggyfonts_SOURCE_DIR}/ProggyVector" "${proggyfonts_SOURCE_DIR}/ProggyVector/ProggyVector-Regular.ttf")
 
 target_include_directories(editor PRIVATE ${imgui_SOURCE_DIR} ${stb_SOURCE_DIR} "lib/glad/include" "lib/nativefiledialog" glfw ${INCLUDES})
-target_link_libraries(editor PRIVATE glfw ${LIBS} cmrc_shaders cmrc_font glm)
+target_link_libraries(editor PRIVATE glfw ${LIBS} cmrc_shaders cmrc_font glm nlohmann_json::nlohmann_json)
 set_target_properties(editor PROPERTIES WIN32_EXECUTABLE TRUE) 
 
 if(MSVC)

@@ -4,7 +4,7 @@
 #include "map_slice.hpp"
 
 class SelectionHandler {
-    // stores the tiles currently beeing held
+    // stores the tiles currently being held
     MapSlice selection_buffer;
     // stores tiles underneath the current selection data
     MapSlice temp_buffer;
@@ -18,8 +18,6 @@ class SelectionHandler {
   public:
     void drag_begin(glm::ivec2 pos);
     void drag_end(glm::ivec2 pos);
-    void room_drag_begin(glm::ivec2 pos);
-    void room_drag_end(glm::ivec2 pos);
     // sets area and copies underlying data
     void start_from_paste(glm::ivec2 pos, const MapSlice& data);
 
@@ -42,6 +40,10 @@ class SelectionHandler {
     bool contains(glm::ivec2 pos) const;
     glm::ivec3 start() const;
     glm::ivec2 size() const;
+
+    bool selecting_room = false;
+    Room* swap_room_1;
+    Room* swap_room_2;
 };
 
 inline SelectionHandler selection_handler;
