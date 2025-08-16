@@ -8,6 +8,8 @@ inline bool updateGeometry = false;
 inline GameData game_data;
 inline std::string exportPath;
 
+// 0 = inspect, 1 = place
+inline int mouse_mode = 0;
 // 0 = forground, 1 = background
 inline uint8_t mode1_layer = 0;
 

@@ -58,7 +58,6 @@ glm::vec2 lastMousePos = glm::vec2(-1);
 glm::vec2 screenSize;
 
 constexpr const char* modes[] = {"Inspect", "Place"};
-int mouse_mode = 0;
 glm::ivec2 mode0_selection = {-1, -1};
 MapTile mode1_placing;
 
@@ -597,6 +596,69 @@ static ImGuiID DockSpaceOverViewport() {
     return dockspace_id;
 }
 
+
+// should probably move these 2 to a utils script 
+ImVec2 Base() {
+  ImVec2 base = ImGui::GetMainViewport()->Pos;
+  return ImVec2(base.x, base.y);
+}
+
+float round_decimal_to(float x, int decimal_precision)
+{
+    float power_of_10 = std::pow(10, decimal_precision);
+    return std::round(x * power_of_10)  / power_of_10;
+}
+
+void DrawStatusBar() {
+    ImGuiIO &io = ImGui::GetIO();
+
+    enum TileFlags {
+    horizontal_mirror = 1 << 0,  // 0001 = 1
+    vertical_mirror = 1 << 1,  // 0010 = 2
+    rotate_90 = 1 << 2,  // 0100 = 4
+    rotate_180 = 1 << 3   // 1000 = 8
+    };
+    
+
+    std::string text_status;
+    std::string divider = " | ";
+
+    text_status += std::format("Mode: {}", mouse_mode ? "place" : "inspect");
+
+    
+    if (mode1_placing.flags & horizontal_mirror) {
+        text_status += divider;
+        text_status += "H. Mirror";
+    }
+    if (mode1_placing.flags & vertical_mirror) {
+        text_status += divider;
+        text_status += "V. Mirror";
+    }
+    if (mode1_placing.flags & rotate_90) {
+        text_status += divider;
+        text_status += "Rot. 90°";
+    }
+    if (mode1_placing.flags & rotate_180) {
+        text_status += divider;
+        text_status += "Rot. 180°";
+    }
+    
+    text_status += divider;
+    text_status += std::format("{} fps", round_decimal_to(io.Framerate, 1));
+
+
+    auto& drawlist = *ImGui::GetBackgroundDrawList(ImGui::GetMainViewport());
+    auto basePos = io.DisplaySize.y + Base().y;
+    auto lineHeight = ImGui::GetTextLineHeightWithSpacing();
+    drawlist.AddText(
+      ImVec2(Base().x +2.0f, basePos - lineHeight),
+      0x99999999, text_status.c_str());
+    // perfectly centered
+    // drawlist.AddText(
+    //   ImVec2(io.DisplaySize.x / 2.f - ImGui::CalcTextSize(text_status.c_str()).x / 2.f + Base().x, basePos - lineHeight),
+    //   0x99999999, text_status.c_str());
+}
+
 void HelpMarker(const char* desc) {
     ImGui::TextDisabled("(?)");
     if(ImGui::BeginItemTooltip()) {
@@ -835,7 +897,7 @@ static void DrawPreviewWindow() {
                     ImGui::SetTooltip("Properties that are stored for each room (40x22 tiles)");
                 }
                 ImGui::Text("position %i %i", room->x, room->y);
-                //ImGui::InputScalar("water level", ImGuiDataType_U8, &room->waterLevel);
+
                 const uint8_t water_min = 0, water_max = 180;
                 if (ImGui::SliderScalar("water level", ImGuiDataType_U8, &room->waterLevel, &water_min, &water_max)) {
                     history.push_action(std::make_unique<SwitchLayer>(room->waterLevel));
@@ -1014,8 +1076,10 @@ b/g to move to background layer.");
         }
         ImGui::Checkbox("Selection ignore air", &selection_handler.ignore_air);
         ImGui::NewLine();
-        ImGui::InputScalar("id", ImGuiDataType_U16, &mode1_placing.tile_id);
-        ImGui::InputScalar("param", ImGuiDataType_U8, &mode1_placing.param);
+
+        int stepsize = 1;
+        ImGui::InputScalar("id", ImGuiDataType_U16, &mode1_placing.tile_id, &stepsize);
+        ImGui::InputScalar("param", ImGuiDataType_U8, &mode1_placing.param, &stepsize);
 
         if(ImGui::BeginTable("tile_flags_table", 2)) {
             int flags = mode1_placing.flags;
@@ -1451,6 +1515,7 @@ static int runViewer() {
             tile_viewer.draw(game_data, updateGeometry);
             texture_importer.draw();
             DrawPreviewWindow();
+            DrawStatusBar();
             draw_overlay();
             draw_water_level();
             search_window.draw_overlay(game_data, selectedMap, camera.scale);
