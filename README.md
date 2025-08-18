@@ -1,9 +1,8 @@
 # Animal Well editor
 Map editor for the game Animal Well. <br/><br/>
-This fork includes some quality of life improvements & tweaks like displaying custom assets, extra hotkeys, more selection options and auto deleting oldest backups to save storage space.
+This fork includes some quality of life improvements & tweaks like displaying custom assets, moving rooms, extra hotkeys, more selection options and auto deleting oldest backups to save storage space.
 
 ## todo:
-- tool for moving entire rooms
 - multi selection
 - include editor buttons in undo history
 - save user preferences
