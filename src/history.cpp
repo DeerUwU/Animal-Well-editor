@@ -36,6 +36,21 @@ void SingleChange::apply() {
     highlightArea(position, {1, 1});
 }
 
+void RoomMove::apply() {
+    //std::swap(from_room, to_room);
+    auto* a = currentMap().getRoom(from_room);
+    auto* b = currentMap().getRoom(to_room);
+    if(a && b) {
+        std::swap(currentMap().coordinate_map[a->x | (a->y << 8)], currentMap().coordinate_map[b->x | (b->y << 8)]);
+        std::swap(a->x, b->x);
+        std::swap(a->y, b->y);
+    }
+}
+//TODO: implement
+void EditorBoolChange::apply() {
+    value = !value;
+}
+
 void MapClear::apply() {
     std::swap(currentMap().rooms, rooms);
 }

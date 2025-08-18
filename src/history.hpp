@@ -49,6 +49,23 @@ class SingleChange final : public HistoryItem {
     void apply() override;
 };
 
+class RoomMove final : public HistoryItem {
+    glm::ivec2 from_room;
+    glm::ivec2 to_room;
+
+  public:
+    RoomMove(glm::ivec2 from_room, glm::ivec2 to_room) : from_room(from_room), to_room(to_room) {}
+    void apply() override;
+};
+//TODO: implement
+class EditorBoolChange final : public HistoryItem {
+    bool value;
+
+    public:
+    EditorBoolChange(bool checkbox_prev, bool checkbox_current) : value(value) {}
+    void apply() override;
+};
+
 class MapClear final : public HistoryItem {
     std::vector<Room> rooms;
 

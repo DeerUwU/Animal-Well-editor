@@ -821,7 +821,6 @@ static void handle_input() {
                 if(GetKeyDown(ImGuiKey_X)) selection_handler.cut();
             }
             selection_handler.move(arrow_key_dir());
-            return;
         }
 
         if(ImGui::IsKeyDown(ImGuiMod_Ctrl) && GetKeyDown(ImGuiKey_V)) {
@@ -902,7 +901,7 @@ static void DrawPreviewWindow() {
 
                 const uint8_t water_min = 0, water_max = 180;
                 if (ImGui::SliderScalar("water level", ImGuiDataType_U8, &room->waterLevel, &water_min, &water_max)) {
-                    history.push_action(std::make_unique<SwitchLayer>(room->waterLevel));
+                    //history.push_action(std::make_unique<SwitchLayer>(room->waterLevel));
                 }
                 const uint8_t bg_min = 0, bg_max = 19;
                 if(ImGui::SliderScalar("background id", ImGuiDataType_U8, &room->bgId, &bg_min, &bg_max)) {

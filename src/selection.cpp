@@ -31,6 +31,7 @@ void SelectionHandler::drag_end_room(glm::ivec2 pos) {
         std::swap(a->x, b->x);
         std::swap(a->y, b->y);
     }
+    history.push_action(std::make_unique<RoomMove>(from_room, to_room));
     release_room();
 }
 void SelectionHandler::release_room() {
