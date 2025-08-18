@@ -17,6 +17,29 @@ void SelectionHandler::drag_end(glm::ivec2 pos) {
     selection_buffer.copy(currentMap(), orig_pos, _size);
 }
 
+void SelectionHandler::drag_begin_room(glm::ivec2 pos) {
+    room_pos = pos;
+}
+void SelectionHandler::drag_end_room(glm::ivec2 pos) {
+    assert(room_pos != glm::ivec2(-1, -1));
+    glm::ivec2 from_room = {room_pos.x / 40, room_pos.y / 22};
+    glm::ivec2 to_room = {pos.x / 40, pos.y / 22};
+    auto* a = currentMap().getRoom(from_room);
+    auto* b = currentMap().getRoom(to_room);
+    if(a && b) {
+        std::swap(currentMap().coordinate_map[a->x | (a->y << 8)], currentMap().coordinate_map[b->x | (b->y << 8)]);
+        std::swap(a->x, b->x);
+        std::swap(a->y, b->y);
+    }
+    release_room();
+}
+void SelectionHandler::release_room() {
+    room_pos = {-1, -1};
+}
+bool SelectionHandler::holding_room() const {
+    return room_pos != glm::ivec2(-1, -1);
+}
+
 void SelectionHandler::start_from_paste(glm::ivec2 pos, const MapSlice& data) {
     release();
     if(data.size() == glm::ivec2(0)) return;
@@ -103,3 +126,4 @@ bool SelectionHandler::contains(glm::ivec2 pos) const {
 }
 glm::ivec3 SelectionHandler::start() const { return glm::ivec3(start_pos, mode1_layer); }
 glm::ivec2 SelectionHandler::size() const { return _size; }
+glm::ivec2 SelectionHandler::room() const { return room_pos; }

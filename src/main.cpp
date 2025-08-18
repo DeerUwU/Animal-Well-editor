@@ -507,10 +507,10 @@ static ImGuiID DockSpaceOverViewport() {
             }
 
             ImGui::MenuItem("Foreground Tiles", "Ctrl+1", &render_data->show_fg);
-            ImGui::ColorEdit4("fg tile color", &render_data->fg_color.r);
             ImGui::MenuItem("Background Tiles", "Ctrl+2", &render_data->show_bg);
-            ImGui::ColorEdit4("bg tile color", &render_data->bg_color.r);
             ImGui::MenuItem("Background Texture", "Ctrl+3", &render_data->show_bg_tex);
+            ImGui::ColorEdit4("fg tile color", &render_data->fg_color.r);
+            ImGui::ColorEdit4("bg tile color", &render_data->bg_color.r);
             ImGui::ColorEdit4("bg Texture color", &render_data->bg_tex_color.r);
             ImGui::MenuItem("Show Room Grid", nullptr, &render_data->room_grid);
             ImGui::MenuItem("Show Water Level", nullptr, &render_data->show_water);
@@ -625,6 +625,10 @@ void DrawStatusBar() {
 
     text_status += std::format("Mode: {}", mouse_mode ? "place" : "inspect");
 
+    if (selection_handler.holding()) {
+        text_status += divider;
+        text_status += "Selection Active";
+    }
     
     if (mode1_placing.flags & horizontal_mirror) {
         text_status += divider;
@@ -650,9 +654,12 @@ void DrawStatusBar() {
     auto& drawlist = *ImGui::GetBackgroundDrawList(ImGui::GetMainViewport());
     auto basePos = io.DisplaySize.y + Base().y;
     auto lineHeight = ImGui::GetTextLineHeightWithSpacing();
-    drawlist.AddText(
-      ImVec2(Base().x +2.0f, basePos - lineHeight),
-      0x99999999, text_status.c_str());
+
+    auto statusbar_startpos = ImVec2(Base().x +5.0f, basePos - lineHeight);
+    auto statusbar_endpos = ImVec2(statusbar_startpos.x + ImGui::CalcTextSize(text_status.c_str()).x, statusbar_startpos.y + lineHeight);
+
+    drawlist.AddRectFilled(statusbar_startpos, statusbar_endpos, IM_COL32(11, 11, 11, 255));
+    drawlist.AddText(statusbar_startpos, IM_COL32(255, 255, 255, 196), text_status.c_str());
     // perfectly centered
     // drawlist.AddText(
     //   ImVec2(io.DisplaySize.x / 2.f - ImGui::CalcTextSize(text_status.c_str()).x / 2.f + Base().x, basePos - lineHeight),
@@ -702,6 +709,7 @@ static void handle_input() {
     ImGuiIO& io = ImGui::GetIO();
 
     const auto delta = lastMousePos - mousePos;
+    auto mouse_world_pos = screen_to_world(mousePos);
     auto lastWorldPos = screen_to_world(lastMousePos);
     lastMousePos = mousePos;
 
@@ -769,13 +777,13 @@ static void handle_input() {
             selection_handler.release();
             return;
         }
+        
+        
 
     } else if(mouse_mode == 1) { // place mode
-        auto mouse_world_pos = screen_to_world(mousePos);
-
         const auto holding = selection_handler.holding();
+        auto holding_room = selection_handler.holding_room();
         auto selecting = selection_handler.selecting();
-        auto selecting_room = selection_handler.selecting_room;
 
         if(!selecting && ImGui::IsKeyDown(ImGuiMod_Shift) && ImGui::IsKeyDown(ImGuiKey_MouseLeft)) { // select start
             selection_handler.drag_begin(mouse_world_pos);
@@ -786,22 +794,16 @@ static void handle_input() {
             selection_handler.drag_end(mouse_world_pos);
             return;
         }
-        // drag room
-        if(!selecting_room && ImGui::IsKeyDown(ImGuiMod_Alt) && ImGui::IsKeyDown(ImGuiKey_MouseLeft) ) { // select start
-            selection_handler.swap_room_1 = currentMap().getRoom(mouse_world_pos / Room::size);
-            selecting_room = true;
+
+        if(!holding_room && ImGui::IsKeyDown(ImGuiKey_MouseLeft) && ImGui::IsKeyDown(ImGuiMod_Alt)) { // drag room start
+            selection_handler.drag_begin_room(mouse_world_pos);
+            holding_room = true;
         }
-        if(selecting_room && !ImGui::IsKeyDown(ImGuiKey_MouseLeft)) { // select start
-            selection_handler.swap_room_2 = currentMap().getRoom(mouse_world_pos / Room::size);
-            uint8_t temp_x = selection_handler.swap_room_2->x;
-            uint8_t temp_y = selection_handler.swap_room_2->y;
-
-            selection_handler.swap_room_2->x = selection_handler.swap_room_1->x;
-            selection_handler.swap_room_2->y = selection_handler.swap_room_1->x;
-
-            selection_handler.swap_room_1->x = temp_x;
-            selection_handler.swap_room_1->y = temp_y;
-            selecting_room = false;
+        if(holding_room)
+            render_data->overlay.AddLine(selection_handler.room() * 8 + 4, mouse_world_pos * 8 + 4, IM_COL32(255, 0, 176, 128), 3 / camera.scale);
+        if(holding_room && !ImGui::IsKeyDown(ImGuiKey_MouseLeft)) { // drag room end
+            selection_handler.drag_end_room(mouse_world_pos);
+            updateGeometry = true;
         }
 
         if((ImGui::IsKeyPressed(ImGuiKey_F) && mode1_layer == 1) ||
@@ -819,6 +821,7 @@ static void handle_input() {
                 if(GetKeyDown(ImGuiKey_X)) selection_handler.cut();
             }
             selection_handler.move(arrow_key_dir());
+            return;
         }
 
         if(ImGui::IsKeyDown(ImGuiMod_Ctrl) && GetKeyDown(ImGuiKey_V)) {
@@ -844,7 +847,7 @@ static void handle_input() {
             if(ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
                 selection_handler.move(mouse_world_pos - lastWorldPos);
             }
-        } else if(!selecting && !selecting_room && ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
+        } else if(!selecting && !holding_room && ImGui::IsKeyDown(ImGuiKey_MouseLeft)) {
             camera.position -= delta / camera.scale;
         }
     }
@@ -864,7 +867,6 @@ static void ColorEdit4(const char* label, glm::u8vec4& col, ImGuiColorEditFlags 
 static void DrawPreviewWindow() {
     ImGui::Begin("Properties");
     auto& io = ImGui::GetIO();
-    // ImGui::Text("fps %f", ImGui::GetIO().Framerate);
 
     if(ImGui::Combo("Mode", &mouse_mode, modes, sizeof(modes) / sizeof(char*))) {
         mode0_selection = glm::ivec2(-1, -1);
@@ -1009,6 +1011,7 @@ static void DrawPreviewWindow() {
         HelpMarker("Middle click to copy a tile.\n\
 Right click to place a tile.\n\
 Shift + Left click to select an area.\n\
+Alt + Left click to move rooms.\n\
 Move selected area with Left click.\n\
 Del to delete selection.\n\
 ctrl + a to select all tiles in room.\n\
@@ -1250,6 +1253,7 @@ static void UpdateUIScaling() {
 static int runViewer() {
 #pragma region glfw/opengl setup
     glfwSetErrorCallback(glfw_error_callback);
+    glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
     if(!glfwInit())
         return 1;
 
@@ -1284,7 +1288,7 @@ static int runViewer() {
 
     // Create window with graphics context
     float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
-    window = glfwCreateWindow(main_scale * 1280, main_scale * 720, "Animal Well map viewer", nullptr, nullptr);
+    window = glfwCreateWindow(main_scale * 1280, main_scale * 720, "Animal Well map editor", nullptr, nullptr);
     
     if(window == nullptr)
         return 1;
